@@ -1,4 +1,4 @@
-import { IDatom } from './types'
+import { IDatom, BlockEntity } from './types'
 import { updateChecklistProgress } from './progress'
 import { getSettings } from './settings'
 
@@ -51,13 +51,11 @@ export async function findParentChecklistBlock(
       console.log('[DEBUG] Block tags:', currentBlock.properties?.tags)
       
       // Check if current block has the configured checklist tag
-      const tags = currentBlock.properties?.tags
-      if (tags) {
-        const hasTag = Array.isArray(tags) ? tags.includes(checklistTag) : tags === checklistTag
-        if (hasTag) {
-          console.log('[DEBUG] Found checklist block:', currentBlock.uuid)
-          return currentBlock.uuid
-        }
+      // Try multiple ways to detect tags since block.properties.tags might be undefined
+      const hasChecklistTag = await checkBlockHasTag(currentBlock, checklistTag)
+      if (hasChecklistTag) {
+        console.log('[DEBUG] Found checklist block:', currentBlock.uuid)
+        return currentBlock.uuid
       }
 
       // Move up to parent
@@ -78,6 +76,83 @@ export async function findParentChecklistBlock(
   } catch (error) {
     console.error('Error finding parent checklist block:', error)
     return null
+  }
+}
+
+/**
+ * Checks if a block has a specific tag using multiple detection methods
+ * @param block - Block to check
+ * @param tag - Tag to look for (without # prefix)
+ * @returns True if block has the tag
+ */
+async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolean> {
+  try {
+    // Method 1: Check properties.tags (standard approach)
+    const tagsFromProps = block.properties?.tags
+    if (tagsFromProps) {
+      const hasTag = Array.isArray(tagsFromProps) 
+        ? tagsFromProps.includes(tag)
+        : tagsFromProps === tag
+      if (hasTag) {
+        console.log('[DEBUG] Tag found in properties.tags:', tag)
+        return true
+      }
+    }
+
+    // Method 2: Check if block content contains the tag
+    const content = block.content || block.title || ''
+    if (content.includes(`#${tag}`)) {
+      console.log('[DEBUG] Tag found in block content:', `#${tag}`)
+      return true
+    }
+
+    // Method 3: Query the block to get its tags explicitly
+    try {
+      const blockWithTags = await logseq.Editor.getBlock(block.uuid, {
+        includeChildren: false
+      })
+      
+      if (blockWithTags?.properties?.tags) {
+        const tags = blockWithTags.properties.tags
+        const hasTag = Array.isArray(tags) 
+          ? tags.includes(tag)
+          : tags === tag
+        if (hasTag) {
+          console.log('[DEBUG] Tag found via explicit query:', tag)
+          return true
+        }
+      }
+    } catch (queryError) {
+      console.log('[DEBUG] Error querying block for tags:', queryError)
+    }
+
+    // Method 4: Use datascript query to check for tags
+    try {
+      const query = `
+      [:find ?tag-title 
+       :in $ ?block-uuid 
+       :where
+       [?b :block/uuid "${block.uuid}"]
+       [?b :block/tags ?tag]
+       [?tag :block/title ?tag-title]]
+      `
+      const results = await logseq.DB.datascriptQuery(query)
+      if (results && results.length > 0) {
+        const tagTitles = results.flat()
+        if (tagTitles.includes(tag)) {
+          console.log('[DEBUG] Tag found via datascript query:', tag)
+          return true
+        }
+      }
+    } catch (queryError) {
+      console.log('[DEBUG] Error with datascript query:', queryError)
+    }
+
+    console.log('[DEBUG] Tag not found:', tag)
+    return false
+  } catch (error) {
+    console.error('Error checking block for tag:', error)
+    return false
   }
 }
 

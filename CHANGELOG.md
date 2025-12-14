@@ -5,6 +5,24 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-12-14
+
+### Added
+- **Robust tag detection** with multiple fallback methods
+- **Content-based tag detection** - checks for `#tag` in block content
+- **Datascript query support** for tag detection
+- **Comprehensive debug logging** for each tag detection method
+
+### Fixed
+- **Tag detection issue** - blocks now properly identified as checklists
+- Multiple ways to detect tags to handle different Logseq block structures
+- Fallback methods when `properties.tags` is undefined
+
+### Changed
+- Replaced simple tag checking with `checkBlockHasTag()` helper function
+- Added 4 different tag detection methods with fallback chain
+- Enhanced debug logging to show which method succeeded
+
 ## [0.1.6] - 2025-12-14
 
 ### Added
