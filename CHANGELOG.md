@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2025-12-14
+
+### Fixed
+- **Datascript query syntax** - fixed `:find` clause to use vector format `[?block-uuid]`
+- **Query parsing error** - resolved "Cannot parse :find, expected: (find-rel | find-coll | find-tuple | find-scalar)"
+- **Tag detection query** - now uses proper datascript query structure
+
+### Changed
+- Updated datascript query to use correct `:find [?block-uuid]` syntax
+- Improved query error handling and logging
+- Simplified result processing
+
 ## [0.1.13] - 2025-12-14
 
 ### Fixed

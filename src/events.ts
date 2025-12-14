@@ -136,7 +136,7 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
     // Main method: Use datascript query to check for tags in the DB graph
     try {
       const query = `
-      {:query [:find ?block-uuid
+      {:query [:find [?block-uuid]
                :where
                [?b :block/uuid ?block-uuid]
                [?b :block/tags ?tag]
