@@ -1,7 +1,7 @@
 import '@logseq/libs'
 import { handleDatabaseChanges } from './events'
 import { updateAllChecklists } from './progress'
-import { registerSettingsUI } from './settings'
+import { registerSettings } from './settings'
 
 /**
  * Main plugin initialization
