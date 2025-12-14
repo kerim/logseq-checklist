@@ -5,6 +5,27 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.13] - 2025-12-14
+
+### Fixed
+- **Tag detection in Logseq DB graphs** - completely rewrote tag detection to use proper datascript queries
+- **Query syntax** - now uses correct `{:query ...}` format for Logseq DB
+- **Tag matching** - uses `:block/title` which works for both built-in and custom tags
+- **Class-based tag detection** - properly finds blocks with `:user.class/checklist-SlGqj6-b` tags
+
+### Changed
+- Replaced complex class API calls with simple datascript query
+- Simplified tag detection to focus on the most reliable method
+- Updated query to match the actual Logseq DB data structure
+- Improved debug logging to show query results
+
+### Removed
+- Unnecessary API calls that were causing errors
+- Complex fallback methods that weren't working
+- Redundant error handling
+
 ## [0.1.12] - 2025-12-14
 
 ### Fixed

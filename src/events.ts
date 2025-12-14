@@ -3,50 +3,44 @@ import { updateChecklistProgress } from './progress'
 import { getSettings } from './settings'
 
 /**
+ * Gets the checkbox property from the checkbox class
+ * Falls back to simple pattern matching if class not found
+ *
+ * @returns The checkbox property name to use for detection
+ */
+async function getCheckboxPropertyFromClass(): Promise<string> {
+  try {
+    // Try to get the checkbox class to find the exact property name
+    const checkboxClass = await logseq.App.getClassByName('checkbox')
+    if (checkboxClass) {
+      console.log('[DEBUG] Found checkbox class:', checkboxClass)
+      return 'property' // Use simple pattern matching
+    } else {
+      console.log('[DEBUG] No checkbox class found, using fallback detection')
+      return 'property' // Fallback to pattern matching
+    }
+  } catch (error) {
+    console.log('[DEBUG] Error getting checkbox class, using fallback:', error)
+    return 'property' // Fallback to pattern matching
+  }
+}
+
+/**
  * Debounce updates to avoid excessive processing
  */
 const pendingUpdates = new Set<string>() // Set of checklist block UUIDs
 let updateTimer: NodeJS.Timeout | null = null
 
 /**
- * Gets the actual checkbox property from the checkbox class definition
- * Queries Logseq to find what property the checkbox class uses
+ * Gets the checkbox property pattern to use for detection
+ * Uses simple pattern matching instead of complex class queries
  *
- * @returns The actual checkbox property name (e.g., "user.property/cbproperty-O9FVGbdJ")
+ * @returns The property pattern to match (e.g., "property")
  */
-async function getCheckboxPropertyFromClass(): Promise<string> {
-  try {
-    const settings = getSettings()
-    const checkboxTag = settings.checkboxTag
-    
-    console.log('[DEBUG] Looking for checkbox class:', checkboxTag)
-    
-    // Try to find the checkbox class using a simpler approach
-    // First, try to get all blocks with the checkbox tag
-    const query = `
-    [:find ?block ?property
-     :where
-     [?block :block/title "${checkboxTag}"]
-     [?block :build/class-properties ?property]]
-    `
-    
-    const results = await logseq.DB.datascriptQuery(query)
-    
-    if (results && results.length > 0) {
-      // results is array of [block, property] arrays
-      const property = results[0][1]  // Get the first property from first result
-      console.log('[DEBUG] Found checkbox property from class:', property)
-      return property
-    }
-    
-    // Fallback: try to find any property that looks like a checkbox
-    console.log('[DEBUG] No checkbox class found, using fallback detection')
-    return 'property'  // Fallback to pattern matching
-    
-  } catch (error) {
-    console.error('Error getting checkbox property from class:', error)
-    return 'property'  // Fallback to pattern matching
-  }
+function getCheckboxPropertyPattern(): string {
+  // Use simple pattern matching - "property" works for most cases
+  // This matches "user.property/cbproperty-O9FVGbdJ" which is what we need
+  return 'property'
 }
 
 /**
@@ -130,7 +124,38 @@ export async function findParentChecklistBlock(
  */
 async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolean> {
   try {
-    // Method 1: Check properties.tags (standard approach)
+    // Primary method: Check if block content contains the tag (for backward compatibility)
+    const content = block.content || block.title || ''
+    const tagWithHash = `#${tag}`
+    
+    if (content.includes(tagWithHash)) {
+      console.log('[DEBUG] Tag found in block content:', tagWithHash)
+      return true
+    }
+
+    // Main method: Use datascript query to check for tags in the DB graph
+    try {
+      const query = `
+      {:query [:find ?block-uuid
+               :where
+               [?b :block/uuid ?block-uuid]
+               [?b :block/tags ?tag]
+               [?tag :block/title "${tag}"]]}
+      `
+      const results = await logseq.DB.datascriptQuery(query)
+      
+      if (results && results.length > 0) {
+        const blockUuids = results.map(r => r[0])
+        if (blockUuids.includes(block.uuid)) {
+          console.log('[DEBUG] Tag found via datascript query:', tag, 'on block:', block.uuid)
+          return true
+        }
+      }
+    } catch (error) {
+      console.log('[DEBUG] Error with datascript query:', error)
+    }
+
+    // Fallback: Check properties.tags if available
     const tagsFromProps = block.properties?.tags
     if (tagsFromProps) {
       const hasTag = Array.isArray(tagsFromProps) 
@@ -142,56 +167,7 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
       }
     }
 
-    // Method 2: Check if block content contains the tag
-    const content = block.content || block.title || ''
-    if (content.includes(`#${tag}`)) {
-      console.log('[DEBUG] Tag found in block content:', `#${tag}`)
-      return true
-    }
-
-    // Method 3: Query the block to get its tags explicitly
-    try {
-      const blockWithTags = await logseq.Editor.getBlock(block.uuid, {
-        includeChildren: false
-      })
-      
-      if (blockWithTags?.properties?.tags) {
-        const tags = blockWithTags.properties.tags
-        const hasTag = Array.isArray(tags) 
-          ? tags.includes(tag)
-          : tags === tag
-        if (hasTag) {
-          console.log('[DEBUG] Tag found via explicit query:', tag)
-          return true
-        }
-      }
-    } catch (queryError) {
-      console.log('[DEBUG] Error querying block for tags:', queryError)
-    }
-
-    // Method 4: Use datascript query to check for tags
-    try {
-      const query = `
-      [:find ?tag-title 
-       :in $ ?block-uuid 
-       :where
-       [?b :block/uuid "${block.uuid}"]
-       [?b :block/tags ?tag]
-       [?tag :block/title ?tag-title]]
-      `
-      const results = await logseq.DB.datascriptQuery(query)
-      if (results && results.length > 0) {
-        const tagTitles = results.flat()
-        if (tagTitles.includes(tag)) {
-          console.log('[DEBUG] Tag found via datascript query:', tag)
-          return true
-        }
-      }
-    } catch (queryError) {
-      console.log('[DEBUG] Error with datascript query:', queryError)
-    }
-
-    console.log('[DEBUG] Tag not found:', tag)
+    console.log('[DEBUG] Tag not found:', tagWithHash, 'in block:', block.uuid)
     return false
   } catch (error) {
     console.error('Error checking block for tag:', error)
