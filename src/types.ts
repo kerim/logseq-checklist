@@ -12,6 +12,24 @@ export type IDatom = [
 ]
 
 /**
+ * Plugin settings interface
+ */
+export interface PluginSettings {
+  checklistTag: string
+  checkboxTag: string
+  checkboxPropertyPattern?: string
+}
+
+/**
+ * Default plugin settings
+ */
+export const DEFAULT_SETTINGS: PluginSettings = {
+  checklistTag: 'checklist',
+  checkboxTag: 'checkbox',
+  checkboxPropertyPattern: 'property'
+}
+
+/**
  * Result of counting checkboxes in a block tree
  */
 export interface CheckboxCount {

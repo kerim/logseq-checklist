@@ -1,6 +1,7 @@
 import '@logseq/libs'
 import { handleDatabaseChanges } from './events'
 import { updateAllChecklists } from './progress'
+import { registerSettingsUI } from './settings'
 
 /**
  * Main plugin initialization
@@ -9,6 +10,10 @@ async function main() {
   console.log('Checklist Progress Indicator plugin loaded')
 
   try {
+    // Register settings UI
+    registerSettingsUI()
+    console.log('Settings UI registered')
+
     // Setup DB change listener for automatic updates
     if (logseq.DB?.onChanged) {
       logseq.DB.onChanged((txData) => {

@@ -1,17 +1,21 @@
 import { BlockEntity, CheckboxCount } from './types'
 import { updateProgressIndicator } from './content'
+import { getSettings } from './settings'
 
 /**
- * Checks if a block is tagged with #checkbox
+ * Checks if a block is tagged with the configured checkbox tag
  */
-function hasCheckboxTag(block: BlockEntity): boolean {
+async function hasCheckboxTag(block: BlockEntity): Promise<boolean> {
   const tags = block.properties?.tags
   if (!tags) return false
 
+  const settings = await getSettings()
+  const checkboxTag = settings.checkboxTag
+
   if (Array.isArray(tags)) {
-    return tags.includes('checkbox')
+    return tags.includes(checkboxTag)
   }
-  return tags === 'checkbox'
+  return tags === checkboxTag
 }
 
 /**
@@ -56,17 +60,17 @@ function getCheckboxValue(block: BlockEntity): boolean | null {
 
 /**
  * Recursively counts checkboxes in a block tree
- * Only counts blocks tagged with #checkbox
+ * Only counts blocks tagged with the configured checkbox tag
  *
  * @param block - Block entity with children
  * @returns Object with total and checked counts
  */
-export function countCheckboxes(block: BlockEntity): CheckboxCount {
+export async function countCheckboxes(block: BlockEntity): Promise<CheckboxCount> {
   let total = 0
   let checked = 0
 
-  // Check if current block is tagged with #checkbox
-  if (hasCheckboxTag(block)) {
+  // Check if current block is tagged with the configured checkbox tag
+  if (await hasCheckboxTag(block)) {
     total++
 
     // Try to get the checkbox value
@@ -80,7 +84,7 @@ export function countCheckboxes(block: BlockEntity): CheckboxCount {
   if (block.children && Array.isArray(block.children)) {
     for (const child of block.children) {
       if (typeof child === 'object' && 'uuid' in child) {
-        const childCounts = countCheckboxes(child as BlockEntity)
+        const childCounts = await countCheckboxes(child as BlockEntity)
         total += childCounts.total
         checked += childCounts.checked
       }
@@ -109,8 +113,8 @@ export async function updateChecklistProgress(
       return
     }
 
-    // Count checkboxes
-    const { total, checked } = countCheckboxes(block)
+    // Count checkboxes using async function
+    const { total, checked } = await countCheckboxes(block)
 
     // Get current content (use 'content' or 'title' depending on availability)
     const currentContent = block.content || block.title || ''

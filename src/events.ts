@@ -1,5 +1,6 @@
 import { IDatom } from './types'
 import { updateChecklistProgress } from './progress'
+import { getSettings } from './settings'
 
 /**
  * Debounce updates to avoid excessive processing
@@ -9,16 +10,20 @@ let updateTimer: NodeJS.Timeout | null = null
 
 /**
  * Checks if a datom represents a checkbox property change
+ * Uses configured property pattern from settings
  *
  * @param datom - Transaction datom
+ * @param propertyPattern - Pattern to match checkbox properties
  * @returns True if this is a checkbox change
  */
-export function isCheckboxChange(datom: IDatom): boolean {
+export async function isCheckboxChange(datom: IDatom, propertyPattern?: string): Promise<boolean> {
   const [, attribute] = datom
 
-  // Check if this is a checkbox property change
-  // Attribute format is typically ":logseq.property/checkbox" or similar
-  return attribute.includes('checkbox')
+  // Use configured pattern or default to 'property'
+  const pattern = propertyPattern || 'property'
+
+  // Check if this attribute matches the configured pattern
+  return attribute.includes(pattern)
 }
 
 /**
@@ -106,11 +111,21 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     // Debug: Show full txData contents to understand structure
     console.log('[DEBUG] txData contents:', JSON.stringify(txData, null, 2))
 
-    // Filter for checkbox changes
-    const checkboxChanges = txData.filter(isCheckboxChange)
+    // Get settings for checkbox property pattern
+    const settings = await getSettings()
+    const propertyPattern = settings.checkboxPropertyPattern
+    console.log('[DEBUG] Using checkbox property pattern:', propertyPattern)
+
+    // Filter for checkbox changes using configured pattern
+    const checkboxChanges = []
+    for (const datom of txData) {
+      if (await isCheckboxChange(datom, propertyPattern)) {
+        checkboxChanges.push(datom)
+      }
+    }
 
     if (checkboxChanges.length === 0) {
-      console.log('[DEBUG] No checkbox changes detected')
+      console.log('[DEBUG] No checkbox changes detected with pattern:', propertyPattern)
       return
     }
 

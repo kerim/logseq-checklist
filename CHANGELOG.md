@@ -5,6 +5,19 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-12-14
+
+### Added
+- **Settings infrastructure**: Configurable checklist and checkbox tags
+- **Settings UI**: Toolbar button and modal for configuring plugin behavior
+- **Dynamic tag detection**: Uses configured tags instead of hardcoded values
+- **Configurable property pattern**: Users can specify what property changes to detect
+
+### Changed
+- Updated checkbox detection to use settings-based property pattern
+- Made tag checking dynamic based on user configuration
+- Improved debug logging to show which pattern is being used
+
 ## [0.1.4] - 2025-12-14
 
 ### Added
