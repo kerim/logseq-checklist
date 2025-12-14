@@ -21,19 +21,20 @@ async function getCheckboxPropertyFromClass(): Promise<string> {
     
     console.log('[DEBUG] Looking for checkbox class:', checkboxTag)
     
-    // Query to find the checkbox class and its properties
+    // Try to find the checkbox class using a simpler approach
+    // First, try to get all blocks with the checkbox tag
     const query = `
-    [:find ?property 
+    [:find ?block ?property
      :where
-     [?class :block/title "${checkboxTag}"]
-     [?class :build/class-properties ?property]]
+     [?block :block/title "${checkboxTag}"]
+     [?block :build/class-properties ?property]]
     `
     
     const results = await logseq.DB.datascriptQuery(query)
     
     if (results && results.length > 0) {
-      // results is array of [property] arrays
-      const property = results[0][0]  // Get the first property
+      // results is array of [block, property] arrays
+      const property = results[0][1]  // Get the first property from first result
       console.log('[DEBUG] Found checkbox property from class:', property)
       return property
     }
