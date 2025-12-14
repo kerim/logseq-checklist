@@ -37,23 +37,43 @@ export async function findParentChecklistBlock(
   blockUuid: string
 ): Promise<string | null> {
   try {
+    const settings = await getSettings()
+    const checklistTag = settings.checklistTag
+    console.log('[DEBUG] Looking for parent with tag:', checklistTag)
+    
     let currentBlock = await logseq.Editor.getBlock(blockUuid)
+    let iterations = 0
+    const maxIterations = 10 // Safety limit
 
-    while (currentBlock) {
-      // Check if current block has #checklist tag
+    while (currentBlock && iterations < maxIterations) {
+      iterations++
+      console.log('[DEBUG] Checking block:', currentBlock.uuid, 'Content:', currentBlock.content || currentBlock.title)
+      console.log('[DEBUG] Block tags:', currentBlock.properties?.tags)
+      
+      // Check if current block has the configured checklist tag
       const tags = currentBlock.properties?.tags
-      if (tags && (Array.isArray(tags) ? tags.includes('checklist') : tags === 'checklist')) {
-        return currentBlock.uuid
+      if (tags) {
+        const hasTag = Array.isArray(tags) ? tags.includes(checklistTag) : tags === checklistTag
+        if (hasTag) {
+          console.log('[DEBUG] Found checklist block:', currentBlock.uuid)
+          return currentBlock.uuid
+        }
       }
 
       // Move up to parent
       if (currentBlock.parent?.id) {
         currentBlock = await logseq.Editor.getBlock(currentBlock.parent.id)
       } else {
+        console.log('[DEBUG] Reached root block, no parent found')
         break
       }
     }
 
+    if (iterations >= maxIterations) {
+      console.warn('[DEBUG] Max iterations reached, possible infinite loop')
+    }
+
+    console.log('[DEBUG] No checklist parent found')
     return null
   } catch (error) {
     console.error('Error finding parent checklist block:', error)
@@ -141,12 +161,18 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
       const block = await logseq.Editor.getBlock(entityId)
 
       if (block) {
-        console.log('[DEBUG] Found block:', block.uuid)
+        console.log('[DEBUG] Found block:', block.uuid, 'Content:', block.content || block.title)
+        console.log('[DEBUG] Block tags:', block.properties?.tags)
+        
         const checklistUuid = await findParentChecklistBlock(block.uuid)
         if (checklistUuid) {
           console.log('[DEBUG] Found parent checklist:', checklistUuid)
           scheduleUpdate(checklistUuid)
+        } else {
+          console.log('[DEBUG] No parent checklist found for block:', block.uuid)
         }
+      } else {
+        console.log('[DEBUG] No block found for entity ID:', entityId)
       }
     }
   } catch (error) {

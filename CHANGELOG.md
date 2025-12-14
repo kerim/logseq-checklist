@@ -5,6 +5,24 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-12-14
+
+### Added
+- **Enhanced debug logging** for parent checklist detection
+- Detailed logging of block hierarchy traversal
+- Logging of tag checking process
+- Safety limits to prevent infinite loops
+
+### Fixed
+- Checkbox detection now working correctly with default settings
+- Property pattern "property" successfully matches "user.property/cbproperty-O9FVGbdJ"
+- Entity ID to block conversion working properly
+
+### Changed
+- Updated `findParentChecklistBlock()` to use configured checklist tag
+- Added comprehensive debug logging to trace parent finding process
+- Improved error handling in parent traversal
+
 ## [0.1.5] - 2025-12-14
 
 ### Added
