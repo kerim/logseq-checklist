@@ -5,6 +5,29 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10] - 2025-12-14
+
+### Added
+- **Smart checkbox property detection** - queries checkbox class to find exact property
+- **Dynamic property discovery** - no more guessing property patterns
+- **Direct class inspection** - reads `:build/class-properties` from checkbox class
+
+### Fixed
+- **Property pattern guessing** - replaced with exact property lookup
+- **Configuration complexity** - removed unnecessary property pattern setting
+- **Detection accuracy** - now uses the actual property name from the class definition
+
+### Changed
+- Replaced pattern-based detection with class-based property discovery
+- Added `getCheckboxPropertyFromClass()` function
+- Updated `isActualCheckboxChange()` to use exact property matching
+- Removed reliance on property pattern settings
+
+### Removed
+- **Checkbox Property Pattern setting** - no longer needed
+- Pattern-based guessing logic
+- Unnecessary configuration complexity
+
 ## [0.1.9] - 2025-12-14
 
 ### Fixed

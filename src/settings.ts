@@ -20,13 +20,6 @@ export function registerSettings(): void {
         title: 'Checkbox Tag',
         description: 'Tag used to identify checkbox blocks (without # prefix)',
         default: DEFAULT_SETTINGS.checkboxTag,
-      },
-      {
-        key: 'checkboxPropertyPattern',
-        type: 'string',
-        title: 'Checkbox Property Pattern',
-        description: 'Pattern to detect checkbox property changes (e.g., "property" or "cb")',
-        default: DEFAULT_SETTINGS.checkboxPropertyPattern,
       }
     ]
 
@@ -49,7 +42,6 @@ export function getSettings(): PluginSettings {
       return {
         checklistTag: logseq.settings?.checklistTag || DEFAULT_SETTINGS.checklistTag,
         checkboxTag: logseq.settings?.checkboxTag || DEFAULT_SETTINGS.checkboxTag,
-        checkboxPropertyPattern: logseq.settings?.checkboxPropertyPattern || DEFAULT_SETTINGS.checkboxPropertyPattern,
       }
     }
     

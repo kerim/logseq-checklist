@@ -9,21 +9,63 @@ const pendingUpdates = new Set<string>() // Set of checklist block UUIDs
 let updateTimer: NodeJS.Timeout | null = null
 
 /**
- * Checks if a datom represents a checkbox property change
- * Uses configured property pattern from settings
+ * Gets the actual checkbox property from the checkbox class definition
+ * Queries Logseq to find what property the checkbox class uses
+ *
+ * @returns The actual checkbox property name (e.g., "user.property/cbproperty-O9FVGbdJ")
+ */
+async function getCheckboxPropertyFromClass(): Promise<string> {
+  try {
+    const settings = getSettings()
+    const checkboxTag = settings.checkboxTag
+    
+    console.log('[DEBUG] Looking for checkbox class:', checkboxTag)
+    
+    // Query to find the checkbox class and its properties
+    const query = `
+    [:find ?class-uuid ?property 
+     :where
+     [?class :block/title "${checkboxTag}"]
+     [?class :build/class-properties ?property]]
+    `
+    
+    const results = await logseq.DB.datascriptQuery(query)
+    
+    if (results && results.length > 0) {
+      // results is array of [class-uuid, property] pairs
+      const property = results[0][1]  // Get the first property
+      console.log('[DEBUG] Found checkbox property from class:', property)
+      return property
+    }
+    
+    // Fallback: try to find any property that looks like a checkbox
+    console.log('[DEBUG] No checkbox class found, using fallback detection')
+    return 'property'  // Fallback to pattern matching
+    
+  } catch (error) {
+    console.error('Error getting checkbox property from class:', error)
+    return 'property'  // Fallback to pattern matching
+  }
+}
+
+/**
+ * Checks if a datom represents an actual checkbox property change
+ * Uses the exact property name from the checkbox class
  *
  * @param datom - Transaction datom
- * @param propertyPattern - Pattern to match checkbox properties
+ * @param checkboxProperty - Exact property name to match
  * @returns True if this is a checkbox change
  */
-export async function isCheckboxChange(datom: IDatom, propertyPattern?: string): Promise<boolean> {
+async function isActualCheckboxChange(datom: IDatom, checkboxProperty: string): Promise<boolean> {
   const [, attribute] = datom
 
-  // Use configured pattern or default to 'property'
-  const pattern = propertyPattern || 'property'
+  // Check if this attribute exactly matches the checkbox property
+  if (attribute === checkboxProperty) {
+    return true
+  }
 
-  // Check if this attribute matches the configured pattern
-  return attribute.includes(pattern)
+  // Also check if it contains the property (for backward compatibility)
+  return attribute.includes(checkboxProperty)
 }
 
 /**
@@ -206,15 +248,14 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     // Debug: Show full txData contents to understand structure
     console.log('[DEBUG] txData contents:', JSON.stringify(txData, null, 2))
 
-    // Get settings for checkbox property pattern
-    const settings = getSettings()
-    const propertyPattern = settings.checkboxPropertyPattern
-    console.log('[DEBUG] Using checkbox property pattern:', propertyPattern)
+    // Get the actual checkbox property from the checkbox class definition
+    const checkboxProperty = await getCheckboxPropertyFromClass()
+    console.log('[DEBUG] Using checkbox property from class:', checkboxProperty)
 
-    // Filter for checkbox changes using configured pattern
+    // Filter for checkbox changes using the actual property name
     const checkboxChanges = []
     for (const datom of txData) {
-      if (await isCheckboxChange(datom, propertyPattern)) {
+      if (await isActualCheckboxChange(datom, checkboxProperty)) {
         checkboxChanges.push(datom)
       }
     }
