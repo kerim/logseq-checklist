@@ -102,6 +102,9 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     }
 
     console.log('[DEBUG] txData array length:', txData.length)
+    
+    // Debug: Show full txData contents to understand structure
+    console.log('[DEBUG] txData contents:', JSON.stringify(txData, null, 2))
 
     // Filter for checkbox changes
     const checkboxChanges = txData.filter(isCheckboxChange)
