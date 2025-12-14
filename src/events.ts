@@ -80,31 +80,34 @@ export function scheduleUpdate(checklistBlockUuid: string): void {
  * Handles database changes from DB.onChanged
  * Filters for checkbox changes and updates affected checklists
  *
- * @param txData - Transaction data (format TBD)
+ * @param changeData - Transaction change object with txData array
  */
-export async function handleDatabaseChanges(txData: any): Promise<void> {
+export async function handleDatabaseChanges(changeData: any): Promise<void> {
   try {
-    // Debug: Log what we actually receive
-    console.log('[DEBUG] DB.onChanged received:', typeof txData, txData)
+    // DB.onChanged receives an object like:
+    // { blocks: [], deletedAssets: [], deletedBlockUuids: [], txData: [], txMeta: {} }
+    console.log('[DEBUG] DB.onChanged received:', changeData)
 
-    // Check if txData is an array
-    if (!Array.isArray(txData)) {
-      console.log('[DEBUG] txData is not an array, type:', typeof txData)
+    // Extract the actual txData array
+    let txData = changeData?.txData
 
-      // Try to convert to array if it's array-like
-      if (txData && typeof txData === 'object' && 'length' in txData) {
-        txData = Array.from(txData)
-        console.log('[DEBUG] Converted to array:', txData)
-      } else {
-        console.warn('[DEBUG] Cannot process txData - not array-like')
-        return
-      }
+    if (!txData) {
+      console.warn('[DEBUG] No txData in change object')
+      return
     }
+
+    if (!Array.isArray(txData)) {
+      console.warn('[DEBUG] txData is not an array:', typeof txData)
+      return
+    }
+
+    console.log('[DEBUG] txData array length:', txData.length)
 
     // Filter for checkbox changes
     const checkboxChanges = txData.filter(isCheckboxChange)
 
     if (checkboxChanges.length === 0) {
+      console.log('[DEBUG] No checkbox changes detected')
       return
     }
 
@@ -114,13 +117,16 @@ export async function handleDatabaseChanges(txData: any): Promise<void> {
     for (const datom of checkboxChanges) {
       const [entityId] = datom
 
+      console.log('[DEBUG] Processing checkbox change for entity:', entityId)
+
       // Convert entity ID to UUID
-      // We need to query the block by entity ID
       const block = await logseq.Editor.getBlock(entityId)
 
       if (block) {
+        console.log('[DEBUG] Found block:', block.uuid)
         const checklistUuid = await findParentChecklistBlock(block.uuid)
         if (checklistUuid) {
+          console.log('[DEBUG] Found parent checklist:', checklistUuid)
           scheduleUpdate(checklistUuid)
         }
       }

@@ -5,6 +5,13 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-12-14
+
+### Fixed
+- Fixed DB.onChanged handler to access txData from change object correctly
+- The hook receives `{ blocks, deletedAssets, deletedBlockUuids, txData, txMeta }`, not just the array
+- Added more detailed debug logging throughout the change detection flow
+
 ## [0.1.2] - 2025-12-14
 
 ### Fixed
