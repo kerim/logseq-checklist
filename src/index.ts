@@ -10,9 +10,9 @@ async function main() {
   console.log('Checklist Progress Indicator plugin loaded')
 
   try {
-    // Register settings UI
-    registerSettingsUI()
-    console.log('Settings UI registered')
+    // Register settings using Logseq's built-in settings system
+    registerSettings()
+    console.log('Settings registered using Logseq schema')
 
     // Setup DB change listener for automatic updates
     if (logseq.DB?.onChanged) {

@@ -9,7 +9,7 @@ async function hasCheckboxTag(block: BlockEntity): Promise<boolean> {
   const tags = block.properties?.tags
   if (!tags) return false
 
-  const settings = await getSettings()
+  const settings = getSettings()
   const checkboxTag = settings.checkboxTag
 
   if (Array.isArray(tags)) {

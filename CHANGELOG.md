@@ -5,6 +5,29 @@ All notable changes to the Logseq Checklist Progress Indicator plugin will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-12-14
+
+### Added
+- **Proper Logseq settings implementation** using `logseq.useSettingsSchema()`
+- **Built-in settings UI** - no more manual modal implementation
+- **Synchronous settings access** via `logseq.settings`
+
+### Fixed
+- **Settings implementation** - now follows Logseq best practices
+- **Settings access** - removed manual storage, uses Logseq's built-in system
+- **Settings UI** - uses native Logseq settings panel
+
+### Changed
+- Replaced manual settings UI with `logseq.useSettingsSchema()`
+- Updated all settings access to use synchronous `logseq.settings`
+- Removed manual settings storage/retrieval functions
+- Updated function names: `registerSettings()` instead of `registerSettingsUI()`
+
+### Removed
+- Manual settings modal implementation
+- Custom settings storage using `getUserConfigs/setUserConfigs`
+- Complex UI registration code
+
 ## [0.1.7] - 2025-12-14
 
 ### Added

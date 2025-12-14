@@ -37,7 +37,7 @@ export async function findParentChecklistBlock(
   blockUuid: string
 ): Promise<string | null> {
   try {
-    const settings = await getSettings()
+    const settings = getSettings()
     const checklistTag = settings.checklistTag
     console.log('[DEBUG] Looking for parent with tag:', checklistTag)
     
@@ -207,7 +207,7 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     console.log('[DEBUG] txData contents:', JSON.stringify(txData, null, 2))
 
     // Get settings for checkbox property pattern
-    const settings = await getSettings()
+    const settings = getSettings()
     const propertyPattern = settings.checkboxPropertyPattern
     console.log('[DEBUG] Using checkbox property pattern:', propertyPattern)
 
