@@ -1,6 +1,6 @@
 {
   "name": "logseq-checklist",
-  "version": "0.1.21",
+  "version": "1.0.0",
   "description": "Automatically adds progress indicators to checklist blocks",
   "main": "dist/index.js",
   "scripts": {

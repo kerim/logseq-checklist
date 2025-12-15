@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-12-15
+
+### First Production Release
+
+This is the first production-ready release of the Logseq Checklist Progress Indicator plugin.
+
+#### Added
+- Automatic real-time progress indicators for `#checklist` blocks
+- Checkbox counting based on `#checkbox` tagged blocks
+- Configurable checklist and checkbox tags via plugin settings
+- Debounced updates (300ms) for optimal performance
+- Support for nested checklists at any depth
+
+#### Changed
+- **Removed slash command** - Plugin now works automatically only
+- **Removed debug logging** - Clean console output for production use
+- **Improved folder structure** - Development files moved to ignored `dev/` folder
+- **Updated README** - User-friendly documentation for end users
+
+#### Technical Highlights
+- Uses datascript queries for reliable tag detection in Logseq DB
+- Reads checkbox properties directly from block objects (not `block.properties`)
+- Properties stored as namespaced keys (`:user.property/name`)
+- Proper error handling throughout
+
+#### Requirements
+- Logseq 0.11.0 or newer
+- DB graph (not markdown/file-based graphs)
+
 ## [0.1.21] - 2025-12-15
 
 ### Fixed

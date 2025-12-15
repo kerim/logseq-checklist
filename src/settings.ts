@@ -24,8 +24,6 @@ export function registerSettings(): void {
     ]
 
     logseq.useSettingsSchema(settings)
-    console.log('Settings schema registered successfully')
-    
   } catch (error) {
     console.error('Error registering settings schema:', error)
   }

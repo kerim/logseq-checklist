@@ -3,24 +3,21 @@ import { updateChecklistProgress } from './progress'
 import { getSettings } from './settings'
 
 /**
- * Gets the checkbox property from the checkbox class
- * Falls back to simple pattern matching if class not found
+ * Gets the checkbox property pattern to use for detection
+ * Uses simple pattern matching instead of complex class queries
  *
- * @returns The checkbox property name to use for detection
+ * @returns The property pattern to match (e.g., "property")
  */
 async function getCheckboxPropertyFromClass(): Promise<string> {
   try {
     // Try to get the checkbox class to find the exact property name
     const checkboxClass = await logseq.App.getClassByName('checkbox')
     if (checkboxClass) {
-      console.log('[DEBUG] Found checkbox class:', checkboxClass)
       return 'property' // Use simple pattern matching
     } else {
-      console.log('[DEBUG] No checkbox class found, using fallback detection')
       return 'property' // Fallback to pattern matching
     }
   } catch (error) {
-    console.log('[DEBUG] Error getting checkbox class, using fallback:', error)
     return 'property' // Fallback to pattern matching
   }
 }
@@ -32,20 +29,7 @@ const pendingUpdates = new Set<string>() // Set of checklist block UUIDs
 let updateTimer: NodeJS.Timeout | null = null
 
 /**
- * Gets the checkbox property pattern to use for detection
- * Uses simple pattern matching instead of complex class queries
- *
- * @returns The property pattern to match (e.g., "property")
- */
-function getCheckboxPropertyPattern(): string {
-  // Use simple pattern matching - "property" works for most cases
-  // This matches "user.property/cbproperty-O9FVGbdJ" which is what we need
-  return 'property'
-}
-
-/**
  * Checks if a datom represents an actual checkbox property change
- * Uses the exact property name from the checkbox class
  *
  * @param datom - Transaction datom
  * @param checkboxProperty - Exact property name to match
@@ -76,22 +60,17 @@ export async function findParentChecklistBlock(
   try {
     const settings = getSettings()
     const checklistTag = settings.checklistTag
-    console.log('[DEBUG] Looking for parent with tag:', checklistTag)
-    
+
     let currentBlock = await logseq.Editor.getBlock(blockUuid)
     let iterations = 0
     const maxIterations = 10 // Safety limit
 
     while (currentBlock && iterations < maxIterations) {
       iterations++
-      console.log('[DEBUG] Checking block:', currentBlock.uuid, 'Content:', currentBlock.content || currentBlock.title)
-      console.log('[DEBUG] Block tags:', currentBlock.properties?.tags)
-      
+
       // Check if current block has the configured checklist tag
-      // Try multiple ways to detect tags since block.properties.tags might be undefined
       const hasChecklistTag = await checkBlockHasTag(currentBlock, checklistTag)
       if (hasChecklistTag) {
-        console.log('[DEBUG] Found checklist block:', currentBlock.uuid)
         return currentBlock.uuid
       }
 
@@ -99,16 +78,10 @@ export async function findParentChecklistBlock(
       if (currentBlock.parent?.id) {
         currentBlock = await logseq.Editor.getBlock(currentBlock.parent.id)
       } else {
-        console.log('[DEBUG] Reached root block, no parent found')
         break
       }
     }
 
-    if (iterations >= maxIterations) {
-      console.warn('[DEBUG] Max iterations reached, possible infinite loop')
-    }
-
-    console.log('[DEBUG] No checklist parent found')
     return null
   } catch (error) {
     console.error('Error finding parent checklist block:', error)
@@ -124,17 +97,15 @@ export async function findParentChecklistBlock(
  */
 async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolean> {
   try {
-    // Primary method: Check if block content contains the tag (for backward compatibility)
+    // Primary method: Check if block content contains the tag
     const content = block.content || block.title || ''
     const tagWithHash = `#${tag}`
-    
+
     if (content.includes(tagWithHash)) {
-      console.log('[DEBUG] Tag found in block content:', tagWithHash)
       return true
     }
 
     // Main method: Use datascript query to check for tags in the DB graph
-    // Uses proper Logseq DB tag matching with (pull ?b [*]) syntax
     // Note: datascriptQuery expects raw datalog format (no {:query ...} wrapper)
     try {
       const query = `
@@ -146,34 +117,28 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
       const results = await logseq.DB.datascriptQuery(query)
 
       if (results && results.length > 0) {
-        // Results format: [[block1], [block2], ...]
-        // Each result is an array containing a full block object
         const foundBlock = results.find(r => r[0]?.uuid === block.uuid)
         if (foundBlock) {
-          console.log('[DEBUG] Tag found via datascript query:', tag, 'on block:', block.uuid)
           return true
         }
       }
     } catch (error) {
-      console.log('[DEBUG] Error with datascript query:', error)
+      // Query failed, continue to fallback
     }
 
     // Fallback: Check properties.tags if available
     const tagsFromProps = block.properties?.tags
     if (tagsFromProps) {
-      const hasTag = Array.isArray(tagsFromProps) 
+      const hasTag = Array.isArray(tagsFromProps)
         ? tagsFromProps.includes(tag)
         : tagsFromProps === tag
       if (hasTag) {
-        console.log('[DEBUG] Tag found in properties.tags:', tag)
         return true
       }
     }
 
-    console.log('[DEBUG] Tag not found:', tagWithHash, 'in block:', block.uuid)
     return false
   } catch (error) {
-    console.error('Error checking block for tag:', error)
     return false
   }
 }
@@ -184,22 +149,17 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
  * @param checklistBlockUuid - UUID of the checklist block to update
  */
 export function scheduleUpdate(checklistBlockUuid: string): void {
-  console.log('[DEBUG] scheduleUpdate called for:', checklistBlockUuid)
   pendingUpdates.add(checklistBlockUuid)
-  console.log('[DEBUG] Pending updates queue:', Array.from(pendingUpdates))
 
   if (updateTimer) {
     clearTimeout(updateTimer)
   }
 
   updateTimer = setTimeout(async () => {
-    console.log('[DEBUG] Debounce timer fired, updating', pendingUpdates.size, 'checklists')
     for (const uuid of pendingUpdates) {
-      console.log('[DEBUG] Calling updateChecklistProgress for:', uuid)
       await updateChecklistProgress(uuid)
     }
     pendingUpdates.clear()
-    console.log('[DEBUG] All pending updates completed')
   }, 300) // 300ms debounce
 }
 
@@ -211,33 +171,17 @@ export function scheduleUpdate(checklistBlockUuid: string): void {
  */
 export async function handleDatabaseChanges(changeData: any): Promise<void> {
   try {
-    // DB.onChanged receives an object like:
-    // { blocks: [], deletedAssets: [], deletedBlockUuids: [], txData: [], txMeta: {} }
-    console.log('[DEBUG] DB.onChanged received:', changeData)
-
-    // Extract the actual txData array
+    // Extract the txData array
     let txData = changeData?.txData
 
-    if (!txData) {
-      console.warn('[DEBUG] No txData in change object')
+    if (!txData || !Array.isArray(txData)) {
       return
     }
 
-    if (!Array.isArray(txData)) {
-      console.warn('[DEBUG] txData is not an array:', typeof txData)
-      return
-    }
-
-    console.log('[DEBUG] txData array length:', txData.length)
-    
-    // Debug: Show full txData contents to understand structure
-    console.log('[DEBUG] txData contents:', JSON.stringify(txData, null, 2))
-
-    // Get the actual checkbox property from the checkbox class definition
+    // Get the checkbox property pattern from the checkbox class
     const checkboxProperty = await getCheckboxPropertyFromClass()
-    console.log('[DEBUG] Using checkbox property from class:', checkboxProperty)
 
-    // Filter for checkbox changes using the actual property name
+    // Filter for checkbox changes
     const checkboxChanges = []
     for (const datom of txData) {
       if (await isActualCheckboxChange(datom, checkboxProperty)) {
@@ -246,34 +190,21 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     }
 
     if (checkboxChanges.length === 0) {
-      console.log('[DEBUG] No checkbox changes detected with pattern:', checkboxProperty)
       return
     }
-
-    console.log('[DEBUG] Found checkbox changes:', checkboxChanges.length)
 
     // For each checkbox change, find and update parent checklist
     for (const datom of checkboxChanges) {
       const [entityId] = datom
 
-      console.log('[DEBUG] Processing checkbox change for entity:', entityId)
-
       // Convert entity ID to UUID
       const block = await logseq.Editor.getBlock(entityId)
 
       if (block) {
-        console.log('[DEBUG] Found block:', block.uuid, 'Content:', block.content || block.title)
-        console.log('[DEBUG] Block tags:', block.properties?.tags)
-        
         const checklistUuid = await findParentChecklistBlock(block.uuid)
         if (checklistUuid) {
-          console.log('[DEBUG] Found parent checklist:', checklistUuid)
           scheduleUpdate(checklistUuid)
-        } else {
-          console.log('[DEBUG] No parent checklist found for block:', block.uuid)
         }
-      } else {
-        console.log('[DEBUG] No block found for entity ID:', entityId)
       }
     }
   } catch (error) {

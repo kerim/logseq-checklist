@@ -1,64 +1,33 @@
 # Logseq Checklist Progress Indicator
 
-Automatically adds progress indicators to blocks tagged with `#checklist`, showing completion status based on child checkbox items.
+Automatically adds progress indicators to blocks tagged with `#checklist`, showing completion status like `(2/5)` based on child checkbox items.
 
 ## Features
 
-- ✅ **Real-time automatic updates** via `DB.onChanged` hook
-- ✅ **Manual update command** as fallback (`/Update checklist progress`)
-- ✅ **Recursive checkbox counting** - counts checkboxes at any depth
-- ✅ **Debounced updates** - prevents UI thrashing during rapid changes
-- ✅ **Clean integration** - progress indicators auto-update as you check/uncheck items
-
-## Usage
-
-### Automatic Mode (Recommended)
-
-1. Tag a parent block with `#checklist`
-2. Add child blocks tagged with `#checkbox`
-3. Add a checkbox property to the `#checkbox` class (if not already set up)
-4. Progress indicator updates automatically when you toggle checkboxes
-
-**Example:**
-```
-- (1/3) watch these films #checklist
-  - The Matrix #checkbox
-  - Inception #checkbox
-  - Interstellar #checkbox
-```
-
-The `(1/3)` indicator updates automatically as you toggle the checkbox property on child blocks.
-
-### Manual Mode
-
-If automatic updates aren't working, use the slash command:
-
-1. Type `/Update checklist progress` anywhere in Logseq
-2. All checklist blocks will be updated
-
-## How It Works
-
-### Checkbox Detection
-- Plugin only counts blocks tagged with `#checkbox` that are nested under blocks tagged with `#checklist`
-- The `#checkbox` class should have a checkbox-type property defined
-- Checkbox state: `true` = checked ✅, `false` or `undefined` = unchecked ☐
-
-### Progress Calculation
-- Recursively traverses all child blocks (any depth) under `#checklist` blocks
-- Counts blocks tagged with `#checkbox`
-- Checks the boolean value of their checkbox property
-- Displays as `(checked/total)` at the start of the checklist block
-
-### Update Mechanism
-- **Primary:** `DB.onChanged` listener detects checkbox changes
-- **Fallback:** Manual slash command updates all checklists
-- **Debouncing:** Updates are batched over 300ms to prevent thrashing
+- ✅ **Automatic real-time updates** - Progress updates instantly as you toggle checkboxes
+- ✅ **Recursive counting** - Counts checkboxes at any depth in the tree
+- ✅ **Debounced updates** - Intelligent batching prevents UI thrashing
+- ✅ **Zero configuration** - Works out of the box with sensible defaults
+- ✅ **DB graph support** - Designed for Logseq's modern database graphs
 
 ## Installation
 
-### Development (Testing)
+### From GitHub Releases (Recommended)
 
-1. Clone or download this repository
+1. Download the latest release from the [Releases page](https://github.com/kerim/logseq-checklist/releases)
+2. Unzip the downloaded file
+3. In Logseq:
+   - Go to Settings → Plugins
+   - Click "Load unpacked plugin"
+   - Select the unzipped plugin directory
+
+### From Source
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/kerim/logseq-checklist.git
+   cd logseq-checklist
+   ```
 2. Install dependencies:
    ```bash
    pnpm install
@@ -67,67 +36,97 @@ If automatic updates aren't working, use the slash command:
    ```bash
    pnpm run build
    ```
-4. In Logseq:
-   - Go to Settings → Plugins
-   - Click "Load unpacked plugin"
-   - Select this plugin directory
+4. Load in Logseq (Settings → Plugins → Load unpacked plugin)
 
-### Development with Watch Mode
+## Usage
 
-For active development:
-```bash
-pnpm run dev
-```
+### Basic Setup
 
-This rebuilds the plugin whenever you change source files. Logseq will auto-reload the plugin.
+1. Create a block and tag it with `#checklist`
+2. Add child blocks tagged with `#checkbox`
+3. If the `#checkbox` class doesn't exist yet, Logseq will prompt you to create it as a class
+4. Add a checkbox property to the `#checkbox` class (if not already configured)
+5. Progress indicators appear automatically and update as you toggle checkboxes
 
-## Project Structure
+**Example:**
 
 ```
-logseq-checklist/
-├── src/
-│   ├── index.ts      # Plugin entry, DB.onChanged setup, slash command
-│   ├── progress.ts   # Core algorithm (count, update)
-│   ├── events.ts     # Event handling (filter, debounce, find parents)
-│   ├── content.ts    # Content manipulation utilities
-│   └── types.ts      # TypeScript interfaces
-├── dist/             # Build output (auto-generated)
-├── package.json      # Dependencies & Logseq metadata
-└── README.md
+- (1/3) Watch these films #checklist
+  - The Matrix #checkbox
+  - Inception #checkbox
+  - Interstellar #checkbox
 ```
+
+The `(1/3)` indicator updates automatically when you toggle the checkbox property on child blocks.
+
+### Nested Checklists
+
+You can create nested checklists by tagging any child block with `#checklist`:
+
+```
+- (2/5) Project tasks #checklist
+  - (1/2) Design phase #checklist #checkbox
+    - Create mockups #checkbox
+    - Get feedback #checkbox
+  - (0/2) Development phase #checklist #checkbox
+    - Write code #checkbox
+    - Write tests #checkbox
+  - Deploy #checkbox
+```
+
+Each checklist maintains its own progress indicator.
+
+## How It Works
+
+### Checkbox Detection
+- The plugin counts only blocks tagged with `#checkbox` that are nested under blocks tagged with `#checklist`
+- The `#checkbox` class should have a checkbox-type property defined
+- Checkbox state: `true` = checked ✅, `false` = unchecked ☐
+
+### Progress Calculation
+- Recursively traverses all child blocks (any depth) under `#checklist` blocks
+- Counts total blocks tagged with `#checkbox`
+- Counts how many have `true` checkbox property values
+- Displays as `(checked/total)` at the start of the checklist block
+
+### Update Mechanism
+- Uses Logseq's `DB.onChanged` listener to detect checkbox changes
+- Updates are debounced over 300ms to batch rapid changes
+- Only modifies blocks when progress actually changes
+
+## Configuration
+
+The plugin includes configurable settings (Settings → Plugins → Checklist Progress Indicator):
+
+- **Checklist Tag**: Tag used to identify checklist blocks (default: `checklist`)
+- **Checkbox Tag**: Tag used to identify checkbox blocks (default: `checkbox`)
 
 ## Requirements
 
-- **Logseq:** 0.11.0+ (DB graph support)
-- **@logseq/libs:** ^0.2.8 (for DB.onChanged API)
-
-## Known Limitations
-
-- Only works with DB graphs (not markdown graphs)
-- Requires `DB.onChanged` API (available in recent Logseq versions)
-- Progress indicators are text-based (not interactive UI elements)
+- **Logseq:** 0.11.0 or newer (DB graph support required)
+- **Graph type:** Database graphs only (not markdown/file-based graphs)
 
 ## Troubleshooting
 
-### Automatic updates not working?
-
-1. Check Logseq version (needs 0.11.0+)
-2. Check browser console for error messages
-3. Use manual command as fallback: `/Update checklist progress`
-
 ### Progress indicator not appearing?
 
-1. Make sure parent block is tagged with `#checklist`
-2. Verify child blocks are tagged with `#checkbox` (not just markdown checkboxes)
-3. Check that the `#checkbox` class has a checkbox property defined
-4. Try manual update command
-5. Check browser console for debug logs
+1. Verify parent block is tagged with `#checklist`
+2. Ensure child blocks are tagged with `#checkbox` (not markdown checkboxes like `- [ ]`)
+3. Check that the `#checkbox` class exists and has a checkbox property configured
+4. Reload Logseq and try again
 
 ### Wrong count?
 
-1. Check that all checkboxes are properly formatted
-2. Nested checklists should each have their own `#checklist` tag
-3. Try manual update to recalculate
+1. Check that all checkbox blocks are properly tagged with `#checkbox`
+2. Verify nested checklists each have their own `#checklist` tag if needed
+3. Reload the page to force a recalculation
+
+### Automatic updates not working?
+
+1. Confirm you're using Logseq 0.11.0 or newer
+2. Check browser console (Cmd/Ctrl+Shift+I) for error messages
+3. Verify you're using a DB graph (not a markdown graph)
+4. Try reloading the plugin (Settings → Plugins → reload)
 
 ## Development
 
@@ -136,23 +135,21 @@ logseq-checklist/
 - `pnpm run build` - Production build
 - `pnpm run dev` - Development build with watch mode
 
-### Testing
+### Project Structure
 
-1. Create a test page in Logseq
-2. Create the `#checkbox` class if it doesn't exist:
-   - Type `#checkbox` and create it as a class
-   - Add a checkbox property to the class schema
-3. Add a checklist block:
-   ```
-   - test checklist #checklist
-     - item 1 #checkbox
-     - item 2 #checkbox
-     - item 3 #checkbox
-   ```
-4. Toggle the checkbox property on child blocks and verify progress updates automatically
-5. Test nested checklists
-6. Test rapid toggling (debouncing)
-7. Check browser console for `[DEBUG]` logs to see property structure
+```
+logseq-checklist/
+├── src/
+│   ├── index.ts      # Plugin initialization
+│   ├── progress.ts   # Checkbox counting and progress updates
+│   ├── events.ts     # DB.onChanged handler, parent finding
+│   ├── content.ts    # Text manipulation utilities
+│   ├── settings.ts   # Plugin settings
+│   └── types.ts      # TypeScript interfaces
+├── dist/             # Build output (auto-generated)
+├── CHANGELOG.md      # Version history
+└── package.json      # Dependencies & metadata
+```
 
 ## License
 
@@ -160,9 +157,15 @@ MIT
 
 ## Contributing
 
-Contributions welcome! Please test thoroughly before submitting PRs.
+Contributions welcome! Please:
+1. Test thoroughly with DB graphs
+2. Follow the existing code style
+3. Update CHANGELOG.md with your changes
+4. Submit a pull request
 
 ## Credits
+
+Created by [P. Kerim Friedman](https://github.com/kerim)
 
 Built with:
 - [Logseq Plugin API](https://github.com/logseq/logseq)
