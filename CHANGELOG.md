@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.18] - 2025-12-15
+
+### Fixed
+- **Checkbox tag detection** - Now uses datascript queries instead of `block.properties.tags`
+- **hasCheckboxTag() function** - Completely rewritten to match checklist tag detection approach
+- **Checkbox counting** - Now properly detects blocks tagged with #checkbox
+
+### Changed
+- Made `hasCheckboxTag()` use the same reliable datascript query pattern as checklist detection
+- Added content-based detection as primary method (fastest)
+- Added datascript query as secondary method (most reliable)
+- Kept properties.tags check as fallback for edge cases
+
+### Technical Details
+- `block.properties.tags` is always undefined when blocks are retrieved via API
+- Must use datascript queries: `[:find (pull ?b [*]) :where [?b :block/tags ?t] [?t :block/title "checkbox"]]`
+- This matches the same fix applied to checklist tag detection in v0.1.16
+
+## [0.1.17] - 2025-12-15
+
+### Changed
+- Added comprehensive debug logging throughout update flow
+- Added logs to scheduleUpdate, updateChecklistProgress, and countCheckboxes
+- Helps diagnose issues with checkbox detection and progress updates
+
 ## [0.1.16] - 2025-12-15
 
 ### Fixed

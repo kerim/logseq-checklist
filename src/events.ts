@@ -184,17 +184,22 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
  * @param checklistBlockUuid - UUID of the checklist block to update
  */
 export function scheduleUpdate(checklistBlockUuid: string): void {
+  console.log('[DEBUG] scheduleUpdate called for:', checklistBlockUuid)
   pendingUpdates.add(checklistBlockUuid)
+  console.log('[DEBUG] Pending updates queue:', Array.from(pendingUpdates))
 
   if (updateTimer) {
     clearTimeout(updateTimer)
   }
 
   updateTimer = setTimeout(async () => {
+    console.log('[DEBUG] Debounce timer fired, updating', pendingUpdates.size, 'checklists')
     for (const uuid of pendingUpdates) {
+      console.log('[DEBUG] Calling updateChecklistProgress for:', uuid)
       await updateChecklistProgress(uuid)
     }
     pendingUpdates.clear()
+    console.log('[DEBUG] All pending updates completed')
   }, 300) // 300ms debounce
 }
 
