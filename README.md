@@ -2,6 +2,8 @@
 
 Automatically adds progress indicators to blocks tagged with `#checklist`, showing completion status like `(2/5)` based on child checkbox items.
 
+> **⚠️ Important:** This plugin requires **Logseq 0.11.0+** with **DB graphs only**. It does not work with markdown/file-based graphs.
+
 ## Features
 
 - ✅ **Automatic real-time updates** - Progress updates instantly as you toggle checkboxes
