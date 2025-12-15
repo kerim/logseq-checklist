@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.19] - 2025-12-15
+## [0.1.20] - 2025-12-15
 
 ### Fixed
 - **Checkbox value reading** - Now reads properties directly from block object instead of `block.properties`

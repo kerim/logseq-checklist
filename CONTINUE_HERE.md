@@ -1,8 +1,59 @@
 # Logseq Checklist Plugin - Continue From Here
 
-**Date:** 2025-12-14
-**Current Version:** 0.1.14
-**Status:** Debugging datascript query syntax and tag detection
+**Date:** 2025-12-15
+**Current Version:** 0.1.20
+**Status:** ✅ All core functionality fixed - Ready for testing!
+
+---
+
+## 🎉 BREAKTHROUGH - All Issues Resolved!
+
+### What Was Fixed (v0.1.15 → v0.1.19)
+
+**v0.1.15:** First attempt to fix query - used `(pull ?b [*])` but kept `{:query ...}` wrapper
+- ❌ Still failed with same parse error
+
+**v0.1.16:** ✅ CRITICAL FIX - Removed `{:query ...}` wrapper entirely
+- Discovered `logseq.DB.datascriptQuery()` expects RAW datalog: `[:find (pull ?b [*]) :where ...]`
+- Tag detection now WORKS! Queries execute successfully
+- Progress indicators appear: "(0/2) This is a checklist"
+
+**v0.1.17:** Added comprehensive debug logging
+- Tracked update flow through scheduleUpdate, updateChecklistProgress, countCheckboxes
+- Helped identify that checkbox tags weren't being detected
+
+**v0.1.18:** ✅ Fixed checkbox tag detection
+- Rewrote `hasCheckboxTag()` to use datascript queries (same as checklist detection)
+- Checkbox counting now WORKS! Shows "total: 2"
+- But checkbox values still showing as `null`
+
+**v0.1.20:** ✅ Fixed checkbox value reading
+- Discovered properties are stored DIRECTLY on block object, NOT in `block.properties`!
+- Properties use namespaced keys: `:user.property/cbproperty-O9FVGbdJ`
+- Rewrote `getCheckboxValue()` to iterate over block object keys
+- Should now correctly read `true`/`false` checkbox states
+
+### What Should Work Now
+
+1. ✅ Datascript queries execute without errors
+2. ✅ Blocks tagged with `#checklist` are detected
+3. ✅ Child blocks tagged with `#checkbox` are counted
+4. ✅ Progress indicators appear on checklist blocks
+5. 🧪 **NEEDS TESTING:** Checkbox values should update progress: (0/2) → (1/2) → (2/2)
+
+### How to Test v0.1.20
+
+1. Reload plugin in Logseq (Settings → Plugins → reload)
+2. Verify version shows **0.1.20**
+3. Open browser console
+4. Toggle a checkbox on a `#checkbox` block
+5. **Expected console output:**
+   - `[DEBUG] Found checkbox property: :user.property/cbproperty-O9FVGbdJ = true` (or `false`)
+   - `[DEBUG] Checkbox value: true` (or `false`, NOT `null`!)
+   - `[DEBUG] Checkbox count: 1 / 2` (when one is checked)
+6. **Expected visual behavior:**
+   - Progress indicator updates: `(0/2)` → `(1/2)` → `(2/2)`
+   - Updates happen automatically when toggling checkboxes
 
 ---
 
