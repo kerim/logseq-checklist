@@ -246,7 +246,7 @@ export async function handleDatabaseChanges(changeData: any): Promise<void> {
     }
 
     if (checkboxChanges.length === 0) {
-      console.log('[DEBUG] No checkbox changes detected with pattern:', propertyPattern)
+      console.log('[DEBUG] No checkbox changes detected with pattern:', checkboxProperty)
       return
     }
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.21] - 2025-12-15
+
+### Fixed
+- **ReferenceError in events.ts** - Fixed undefined `propertyPattern` variable reference
+- Changed to use `checkboxProperty` variable instead (leftover from previous refactoring)
+- Eliminates console error that appeared on every database change
+
 ## [0.1.20] - 2025-12-15
 
 ### Fixed
