@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15] - 2025-12-15
+
+### Fixed
+- **Datascript query syntax** - FINALLY fixed using proper `(pull ?b [*])` syntax instead of `[?block-uuid]`
+- **Tag detection query** - replaced incorrect vector format with proper pull pattern
+- **Query parsing error** - resolved "Cannot parse :find" error by using correct Logseq DB query structure
+- **Result processing** - updated to handle full block objects instead of UUIDs
+
+### Changed
+- Query in `src/events.ts` now uses `{:query [:find (pull ?b [*]) :where [?b :block/tags ?t] [?t :block/title "tag"]]}` format
+- Query in `src/progress.ts` updated to use proper tag matching instead of string matching for consistency
+- Improved code comments to explain correct datascript query syntax
+- Result processing now filters full block objects to find matching UUID
+
+### Technical Details
+- Previous attempts (v0.1.13, v0.1.14) used `[:find [?block-uuid]]` which is invalid datascript syntax
+- Correct format requires `(pull ?b [*])` to return full block entities
+- Tag matching must use `[?b :block/tags ?t]` followed by `[?t :block/title "tagname"]`
+- Based on Logseq DB knowledge documentation and working examples in codebase
+
 ## [0.1.14] - 2025-12-14
 
 ### Fixed

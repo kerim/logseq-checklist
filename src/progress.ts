@@ -137,13 +137,12 @@ export async function updateChecklistProgress(
  */
 export async function updateAllChecklists(): Promise<number> {
   try {
-    // Query all blocks with #checklist tag
+    // Query all blocks with #checklist tag using proper Logseq DB tag matching
     const query = `
-    [:find (pull ?b [*])
-     :where
-     [?b :block/properties ?props]
-     [(get ?props :tags) ?tags]
-     [(clojure.string/includes? (str ?tags) "checklist")]]
+    {:query [:find (pull ?b [*])
+             :where
+             [?b :block/tags ?t]
+             [?t :block/title "checklist"]]}
     `
 
     const results = await logseq.DB.datascriptQuery(query)
