@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19] - 2025-12-15
+
+### Fixed
+- **Checkbox value reading** - Now reads properties directly from block object instead of `block.properties`
+- **Property access in Logseq DB** - Discovered properties are stored as namespaced keys on block object
+- **Checkbox state detection** - Can now properly read true/false values from checkbox properties
+
+### Changed
+- Rewrote `getCheckboxValue()` to iterate over block object keys
+- Now looks for keys starting with `:` and containing `property`
+- Checks if value is boolean type (checkbox properties are boolean)
+- Skips metadata properties like `:logseq.property/created-by-ref`
+
+### Technical Details
+- In Logseq DB, properties are NOT stored in `block.properties` (which is always undefined)
+- Properties are stored directly on block object with namespaced keys: `:user.property/name` or `:logseq.property/name`
+- Example: `:user.property/cbproperty-O9FVGbdJ` with boolean value
+- This is the correct Logseq DB data model for property access
+
 ## [0.1.18] - 2025-12-15
 
 ### Fixed

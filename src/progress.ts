@@ -59,38 +59,30 @@ async function hasCheckboxTag(block: BlockEntity): Promise<boolean> {
  * Looks for any boolean/checkbox-type property
  */
 function getCheckboxValue(block: BlockEntity): boolean | null {
-  if (!block.properties) return null
+  console.log('[DEBUG] getCheckboxValue called for block:', block.uuid)
 
-  const props = block.properties as Record<string, any>
+  // In Logseq DB, properties are stored directly on the block object with namespaced keys
+  // Format: ':user.property/propertyname' or ':logseq.property/propertyname'
+  // NOT in block.properties!
 
-  // Debug logging to see what properties are available
-  console.log('[DEBUG] Checkbox block properties:', {
-    uuid: block.uuid,
-    properties: Object.keys(props),
-    values: props
-  })
+  const blockObj = block as Record<string, any>
 
-  // Look for any boolean property (excluding tags)
-  for (const [key, value] of Object.entries(props)) {
-    // Skip the tags property
-    if (key === 'tags') continue
+  // Look for properties directly on the block object
+  // Properties have keys starting with ':' and containing 'property'
+  for (const [key, value] of Object.entries(blockObj)) {
+    // Skip non-property keys
+    if (!key.startsWith(':')) continue
+    if (!key.includes('property')) continue
+    if (key === ':logseq.property/created-by-ref') continue // Skip metadata
 
-    // Look for boolean values (checkbox properties are boolean)
+    // Check if it's a boolean value (checkbox properties are boolean)
     if (typeof value === 'boolean') {
-      console.log(`[DEBUG] Found boolean property: ${key} = ${value}`)
+      console.log(`[DEBUG] Found checkbox property: ${key} = ${value}`)
       return value
-    }
-
-    // Also check for properties with 'checkbox' or 'cb' in the name
-    if (key.toLowerCase().includes('checkbox') || key.toLowerCase().includes('cb')) {
-      console.log(`[DEBUG] Found checkbox-named property: ${key} = ${value}`)
-      if (typeof value === 'boolean') {
-        return value
-      }
     }
   }
 
-  console.log('[DEBUG] No checkbox value found')
+  console.log('[DEBUG] No checkbox value found on block')
   return null
 }
 
