@@ -10,6 +10,12 @@ Automatically adds progress indicators to blocks tagged with `#checklist`, showi
 - ✅ **Zero configuration** - Works out of the box with sensible defaults
 - ✅ **DB graph support** - Designed for Logseq's modern database graphs
 
+## Screenshots
+
+![Checklist Progress Indicator in action](screenshots/checklist.png)
+
+*The plugin automatically adds `(1/2)` progress indicators to blocks tagged with `#checklist`. Note: The screenshot shows custom tags (`#cb`), but the default checkbox tag is `#checkbox`. Both tags are configurable in plugin settings.*
+
 ## Installation
 
 ### From GitHub Releases (Recommended)
