@@ -138,11 +138,12 @@ export async function updateChecklistProgress(
 export async function updateAllChecklists(): Promise<number> {
   try {
     // Query all blocks with #checklist tag using proper Logseq DB tag matching
+    // Note: datascriptQuery expects raw datalog format (no {:query ...} wrapper)
     const query = `
-    {:query [:find (pull ?b [*])
-             :where
-             [?b :block/tags ?t]
-             [?t :block/title "checklist"]]}
+    [:find (pull ?b [*])
+     :where
+     [?b :block/tags ?t]
+     [?t :block/title "checklist"]]
     `
 
     const results = await logseq.DB.datascriptQuery(query)

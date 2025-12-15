@@ -135,12 +135,13 @@ async function checkBlockHasTag(block: BlockEntity, tag: string): Promise<boolea
 
     // Main method: Use datascript query to check for tags in the DB graph
     // Uses proper Logseq DB tag matching with (pull ?b [*]) syntax
+    // Note: datascriptQuery expects raw datalog format (no {:query ...} wrapper)
     try {
       const query = `
-      {:query [:find (pull ?b [*])
-               :where
-               [?b :block/tags ?t]
-               [?t :block/title "${tag}"]]}
+      [:find (pull ?b [*])
+       :where
+       [?b :block/tags ?t]
+       [?t :block/title "${tag}"]]
       `
       const results = await logseq.DB.datascriptQuery(query)
 

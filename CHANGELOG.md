@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16] - 2025-12-15
+
+### Fixed
+- **Datascript query wrapper** - Removed `{:query ...}` wrapper that was causing parse errors
+- **Query format** - Now using raw datalog format as expected by `logseq.DB.datascriptQuery()` API
+- **Tag detection** - Queries now execute successfully without parse errors
+
+### Changed
+- Query format changed from `{:query [:find ...]}` to raw `[:find ...]` format
+- Both `src/events.ts` and `src/progress.ts` now use consistent raw datalog syntax
+- Added clarifying comments about datascriptQuery expecting raw format
+
+### Technical Details
+- The `{:query ...}` wrapper is for UI queries (in blocks), not for the datascriptQuery API
+- The API expects raw datalog: `[:find (pull ?b [*]) :where ...]`
+- v0.1.15 incorrectly used wrapped format which continued to fail
+
 ## [0.1.15] - 2025-12-15
 
 ### Fixed
