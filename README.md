@@ -20,9 +20,14 @@ Automatically adds progress indicators to blocks tagged with `#checklist`, showi
 
 ## Installation
 
-**Recommended:** Install from the Logseq marketplace (Settings → Plugins → Marketplace).
+> **Note:** This plugin is pending approval for the Logseq marketplace. Once approved, it will be available via Settings → Plugins → Marketplace.
 
-**Alternative:** Download a release from the [Releases page](https://github.com/kerim/logseq-checklist/releases) and manually load it in Logseq (Settings → Plugins → Load unpacked plugin).
+**Current installation method:**
+
+1. Download the latest release from the [Releases page](https://github.com/kerim/logseq-checklist/releases)
+2. Unzip the downloaded file
+3. In Logseq, go to Settings → Plugins → Load unpacked plugin
+4. Select the unzipped plugin directory
 
 ## Usage
 
